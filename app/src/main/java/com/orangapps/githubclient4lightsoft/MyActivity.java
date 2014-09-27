@@ -1,9 +1,6 @@
 package com.orangapps.githubclient4lightsoft;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
-import android.content.Context;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -16,16 +13,13 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
-import com.orangapps.githubclient4lightsoft.data.User;
 import com.orangapps.githubclient4lightsoft.data.UsersDataHolder;
+import com.orangapps.githubclient4lightsoft.ui.StableArrayAdapter;
 
 import org.json.JSONException;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 
@@ -73,14 +67,10 @@ public class MyActivity extends ActionBarActivity
 
 
         final ListView listview = (ListView) findViewById(R.id.users_list);
-
-
-        final StableArrayAdapter adapter = new StableArrayAdapter(this, android.R.layout.simple_list_item_1, dataHolder.getUsers());
+        final StableArrayAdapter adapter = new StableArrayAdapter(this, dataHolder.getUsers());
         listview.setAdapter(adapter);
 
         listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-            @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
             @Override
             public void onItemClick(AdapterView<?> parent, final View view, int position, long id) {
 
@@ -91,29 +81,7 @@ public class MyActivity extends ActionBarActivity
 
     }
 
-    private class StableArrayAdapter extends ArrayAdapter<User> {
 
-        HashMap<String, Integer> mIdMap = new HashMap<String, Integer>();
-
-        public StableArrayAdapter(Context context, int textViewResourceId, List<User> userList) {
-            super(context, textViewResourceId, userList);
-            for (int i = 0; i < userList.size(); ++i) {
-                mIdMap.put(userList.get(i).getLogin(), i);
-            }
-        }
-
-        @Override
-        public long getItemId(int position) {
-            String item = getItem(position).getLogin();
-            return mIdMap.get(item);
-        }
-
-        @Override
-        public boolean hasStableIds() {
-            return true;
-        }
-
-    }
 
 
     @Override
