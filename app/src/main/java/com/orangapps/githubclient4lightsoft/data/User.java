@@ -37,4 +37,29 @@ public class User {
     public Bitmap getImg() {
         return img;
     }
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof User)) return false;
+
+        User user = (User) o;
+
+        if (!avatar_url.equals(user.avatar_url)) return false;
+        if (img != null ? !img.equals(user.img) : user.img != null) return false;
+        if (!login.equals(user.login)) return false;
+        if (!repos_url.equals(user.repos_url)) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = login.hashCode();
+        result = 31 * result + avatar_url.hashCode();
+        result = 31 * result + repos_url.hashCode();
+        result = 31 * result + (img != null ? img.hashCode() : 0);
+        return result;
+    }
 }

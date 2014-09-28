@@ -14,6 +14,7 @@ import com.orangapps.githubclient4lightsoft.data.User;
 import com.orangapps.githubclient4lightsoft.githubApi.AsyncImageRequest;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -22,25 +23,25 @@ import java.util.List;
 
 public class StableArrayAdapter extends ArrayAdapter<User> {
 
-    private List<User> users = new ArrayList<User>();
-
+    private List<User> userList = new ArrayList<User>();
+    private List<User> usersToAdd = new ArrayList<User>();
     private Context context;
 
     public StableArrayAdapter(Context aContext, List<User> userList) {
         super(aContext, R.layout.list_node, userList);
         context = aContext;
-        users = userList;
+        this.userList = userList;
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View rowView = inflater.inflate(R.layout.list_node, parent, false);
-        TextView textView = (TextView) rowView.findViewById(R.id.login_label);
         final ImageView imageView = (ImageView) rowView.findViewById(R.id.avatar_icon);
 
-        final User user = users.get(position);
+        final User user = userList.get(position);
 
+        TextView textView = (TextView) rowView.findViewById(R.id.login_label);
         textView.setText(user.getLogin());
 
         String avatar_url = user.getAvatar_url();
@@ -55,15 +56,23 @@ public class StableArrayAdapter extends ArrayAdapter<User> {
                         user.setImg(bitmap);
                         imageView.setImageBitmap(bitmap);
                     }
-                }.execute(avatar_url).get();
+                }.execute(avatar_url);
 
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-
-
         return rowView;
+    }
+
+    public void addUsers(List<User> newUsers) {
+        usersToAdd.clear();
+        usersToAdd.addAll(newUsers);
+    }
+
+    public void updateUsersList() {
+        Collections.copy(userList, usersToAdd);
+        usersToAdd.clear();
     }
 
 

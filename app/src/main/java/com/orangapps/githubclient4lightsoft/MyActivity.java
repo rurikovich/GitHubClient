@@ -2,6 +2,8 @@ package com.orangapps.githubclient4lightsoft;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.ProgressDialog;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -14,19 +16,16 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
 import com.orangapps.githubclient4lightsoft.data.UsersDataHolder;
 import com.orangapps.githubclient4lightsoft.ui.StableArrayAdapter;
 
-import org.json.JSONException;
-
-import java.util.concurrent.ExecutionException;
-
 
 public class MyActivity extends ActionBarActivity
-        implements NavigationDrawerFragment.NavigationDrawerCallbacks {
+        implements NavigationDrawerFragment.NavigationDrawerCallbacks, AbsListView.OnScrollListener {
 
     /**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
@@ -38,38 +37,40 @@ public class MyActivity extends ActionBarActivity
      */
     private CharSequence mTitle;
 
+    private ProgressDialog progressDialog;
 
     private UsersDataHolder dataHolder;
+
+    private int preLastListItem;
+    private StableArrayAdapter adapter;
+    private ListView listview;
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR1)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my);
+        progressDialog = new ProgressDialog(MyActivity.this);
 
-        mNavigationDrawerFragment = (NavigationDrawerFragment)
-                getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
+
+        mNavigationDrawerFragment = (NavigationDrawerFragment) getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
         mTitle = getTitle();
 
         // Set up the drawer.
-        mNavigationDrawerFragment.setUp(
-                R.id.navigation_drawer,
-                (DrawerLayout) findViewById(R.id.drawer_layout));
+        mNavigationDrawerFragment.setUp(R.id.navigation_drawer, (DrawerLayout) findViewById(R.id.drawer_layout));
 
 
         dataHolder = new UsersDataHolder();
         try {
             dataHolder.init();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        } catch (JSONException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
-        final ListView listview = (ListView) findViewById(R.id.users_list);
-        final StableArrayAdapter adapter = new StableArrayAdapter(this, dataHolder.getUsers().subList(0,20));
+
+        listview = (ListView) findViewById(R.id.users_list);
+        adapter = new StableArrayAdapter(this, dataHolder.getUsers());
+        listview.setOnScrollListener(this);
         listview.setAdapter(adapter);
 
         listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -139,6 +140,61 @@ public class MyActivity extends ActionBarActivity
         }
         return super.onOptionsItemSelected(item);
     }
+
+    @Override
+    public void onScrollStateChanged(AbsListView view, int scrollState) {
+        if (scrollState == 0) {
+            adapter.updateUsersList();
+            adapter.notifyDataSetChanged();
+        }
+
+    }
+
+    @Override
+    public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+        switch (view.getId()) {
+            case R.id.users_list:
+                final int lastItem = firstVisibleItem + visibleItemCount;
+                if (lastItem == totalItemCount) {
+                    if (preLastListItem != lastItem) { //to avoid multiple calls for last item
+
+                        AsyncTask<String, String, String> asyncTask = new AsyncTask<String, String, String>() {
+
+                            @Override
+                            protected void onPreExecute() {
+                                super.onPreExecute();
+                                progressDialog.setMessage("loading.");
+                                progressDialog.show();
+                            }
+
+                            @Override
+                            protected String doInBackground(String... params) {
+                                try {
+                                    dataHolder.fetchNewUsersNotAsync();
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                                return null;
+                            }
+
+                            @Override
+                            protected void onPostExecute(String str) {
+                                super.onPostExecute(str);
+                                progressDialog.hide();
+                                adapter.addUsers(dataHolder.getUsers());
+                                adapter.updateUsersList();
+                                adapter.notifyDataSetChanged();
+                            }
+                        };
+
+                        asyncTask.execute();
+
+                        preLastListItem = lastItem;
+                    }
+                }
+        }
+    }
+
 
     /**
      * A placeholder fragment containing a simple view.
