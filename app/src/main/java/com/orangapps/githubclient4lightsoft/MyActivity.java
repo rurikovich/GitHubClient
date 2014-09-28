@@ -1,6 +1,8 @@
 package com.orangapps.githubclient4lightsoft;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -39,6 +41,7 @@ public class MyActivity extends ActionBarActivity
 
     private UsersDataHolder dataHolder;
 
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR1)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -65,9 +68,8 @@ public class MyActivity extends ActionBarActivity
             e.printStackTrace();
         }
 
-
         final ListView listview = (ListView) findViewById(R.id.users_list);
-        final StableArrayAdapter adapter = new StableArrayAdapter(this, dataHolder.getUsers());
+        final StableArrayAdapter adapter = new StableArrayAdapter(this, dataHolder.getUsers().subList(0,20));
         listview.setAdapter(adapter);
 
         listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -80,8 +82,6 @@ public class MyActivity extends ActionBarActivity
 
 
     }
-
-
 
 
     @Override
@@ -118,9 +118,9 @@ public class MyActivity extends ActionBarActivity
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         if (!mNavigationDrawerFragment.isDrawerOpen()) {
-            // Only show items in the action bar relevant to this screen
+            // Only show items in the onImageDownloadedAction bar relevant to this screen
             // if the drawer is not showing. Otherwise, let the drawer
-            // decide what to show in the action bar.
+            // decide what to show in the onImageDownloadedAction bar.
             getMenuInflater().inflate(R.menu.my, menu);
             restoreActionBar();
             return true;
@@ -130,7 +130,7 @@ public class MyActivity extends ActionBarActivity
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
+        // Handle onImageDownloadedAction bar item clicks here. The onImageDownloadedAction bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();

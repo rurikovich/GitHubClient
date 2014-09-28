@@ -46,7 +46,7 @@ public class NavigationDrawerFragment extends Fragment {
     private NavigationDrawerCallbacks mCallbacks;
 
     /**
-     * Helper component that ties the action bar to the navigation drawer.
+     * Helper component that ties the onImageDownloadedAction bar to the navigation drawer.
      */
     private ActionBarDrawerToggle mDrawerToggle;
 
@@ -82,7 +82,7 @@ public class NavigationDrawerFragment extends Fragment {
     @Override
     public void onActivityCreated (Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        // Indicate that this fragment would like to influence the set of actions in the action bar.
+        // Indicate that this fragment would like to influence the set of actions in the onImageDownloadedAction bar.
         setHasOptionsMenu(true);
     }
 
@@ -133,7 +133,7 @@ public class NavigationDrawerFragment extends Fragment {
         actionBar.setHomeButtonEnabled(true);
 
         // ActionBarDrawerToggle ties together the the proper interactions
-        // between the navigation drawer and the action bar app icon.
+        // between the navigation drawer and the onImageDownloadedAction bar app icon.
         mDrawerToggle = new ActionBarDrawerToggle(
                 getActivity(),                    /* host Activity */
                 mDrawerLayout,                    /* DrawerLayout object */
@@ -232,8 +232,8 @@ public class NavigationDrawerFragment extends Fragment {
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        // If the drawer is open, show the global app actions in the action bar. See also
-        // showGlobalContextActionBar, which controls the top-left area of the action bar.
+        // If the drawer is open, show the global app actions in the onImageDownloadedAction bar. See also
+        // showGlobalContextActionBar, which controls the top-left area of the onImageDownloadedAction bar.
         if (mDrawerLayout != null && isDrawerOpen()) {
             inflater.inflate(R.menu.global, menu);
             showGlobalContextActionBar();
@@ -248,7 +248,7 @@ public class NavigationDrawerFragment extends Fragment {
         }
 
         if (item.getItemId() == R.id.action_example) {
-            Toast.makeText(getActivity(), "Example action.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getActivity(), "Example onImageDownloadedAction.", Toast.LENGTH_SHORT).show();
             return true;
         }
 
@@ -256,7 +256,7 @@ public class NavigationDrawerFragment extends Fragment {
     }
 
     /**
-     * Per the navigation drawer design guidelines, updates the action bar to show the global app
+     * Per the navigation drawer design guidelines, updates the onImageDownloadedAction bar to show the global app
      * 'context', rather than just what's in the current screen.
      */
     private void showGlobalContextActionBar() {
