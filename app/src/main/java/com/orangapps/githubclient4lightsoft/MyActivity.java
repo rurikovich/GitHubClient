@@ -2,13 +2,13 @@ package com.orangapps.githubclient4lightsoft;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
-import android.app.ProgressDialog;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.view.LayoutInflater;
@@ -25,7 +25,7 @@ import com.orangapps.githubclient4lightsoft.ui.StableArrayAdapter;
 
 
 public class MyActivity extends ActionBarActivity
-        implements NavigationDrawerFragment.NavigationDrawerCallbacks, AbsListView.OnScrollListener {
+        implements NavigationDrawerFragment.NavigationDrawerCallbacks, AbsListView.OnScrollListener, SwipeRefreshLayout.OnRefreshListener {
 
     /**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
@@ -37,21 +37,54 @@ public class MyActivity extends ActionBarActivity
      */
     private CharSequence mTitle;
 
-    private ProgressDialog progressDialog;
+//    private ProgressDialog progressDialog;
 
     private UsersDataHolder dataHolder;
 
     private int preLastListItem;
     private StableArrayAdapter adapter;
     private ListView listview;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
+
+    private class FetchUsersAsyncTask extends AsyncTask<String, String, String> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            mSwipeRefreshLayout.setRefreshing(false);
+            mSwipeRefreshLayout.setColorScheme(android.R.color.darker_gray,
+                    android.R.color.holo_blue_light,
+                    android.R.color.secondary_text_light_nodisable,
+                    android.R.color.holo_blue_dark);
+
+            mSwipeRefreshLayout.setRefreshing(true);
+        }
+
+        @Override
+        protected String doInBackground(String... params) {
+            try {
+                dataHolder.fetchNewUsersNotAsync();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String str) {
+            super.onPostExecute(str);
+            mSwipeRefreshLayout.setRefreshing(false);
+            adapter.addUsers(dataHolder.getUsers());
+            adapter.updateUsersList();
+            adapter.notifyDataSetChanged();
+        }
+    }
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR1)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my);
-        progressDialog = new ProgressDialog(MyActivity.this);
-
 
         mNavigationDrawerFragment = (NavigationDrawerFragment) getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
         mTitle = getTitle();
@@ -67,7 +100,9 @@ public class MyActivity extends ActionBarActivity
             e.printStackTrace();
         }
 
-
+        mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.pull_to_request_layout);
+        mSwipeRefreshLayout.setOnRefreshListener(this);
+        // делаем повеселее
         listview = (ListView) findViewById(R.id.users_list);
         adapter = new StableArrayAdapter(this, dataHolder.getUsers());
         listview.setOnScrollListener(this);
@@ -158,41 +193,31 @@ public class MyActivity extends ActionBarActivity
                 if (lastItem == totalItemCount) {
                     if (preLastListItem != lastItem) { //to avoid multiple calls for last item
 
-                        AsyncTask<String, String, String> asyncTask = new AsyncTask<String, String, String>() {
-
-                            @Override
-                            protected void onPreExecute() {
-                                super.onPreExecute();
-                                progressDialog.setMessage("loading.");
-                                progressDialog.show();
-                            }
-
-                            @Override
-                            protected String doInBackground(String... params) {
-                                try {
-                                    dataHolder.fetchNewUsersNotAsync();
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
-                                return null;
-                            }
-
-                            @Override
-                            protected void onPostExecute(String str) {
-                                super.onPostExecute(str);
-                                progressDialog.hide();
-                                adapter.addUsers(dataHolder.getUsers());
-                                adapter.updateUsersList();
-                                adapter.notifyDataSetChanged();
-                            }
-                        };
-
-                        asyncTask.execute();
+                        FetchUsersAsyncTask fetchUsersAsyncTask = new FetchUsersAsyncTask();
+                        fetchUsersAsyncTask.execute();
 
                         preLastListItem = lastItem;
                     }
                 }
         }
+    }
+
+    @Override
+    public void onRefresh() {
+        adapter.clear();
+        dataHolder.getUsers().clear();
+        new FetchUsersAsyncTask() {
+            @Override
+            protected void onPreExecute() {
+                mSwipeRefreshLayout.setRefreshing(false);
+                mSwipeRefreshLayout.setColorScheme(android.R.color.holo_red_dark,
+                        android.R.color.holo_orange_dark,
+                        android.R.color.holo_purple,
+                        android.R.color.holo_green_dark);
+                mSwipeRefreshLayout.setRefreshing(true);
+            }
+        }.execute();
+
     }
 
 

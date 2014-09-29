@@ -10,8 +10,7 @@
         android:orderInCategory="100"
         app:showAsAction="never" />
     <item android:id="@+id/loading"
-        android:title="l
-        "
+        android:title=""
         android:orderInCategory="100"
         app:showAsAction="withText|ifRoom" />
 </menu>
