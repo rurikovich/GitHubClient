@@ -2,7 +2,6 @@ package com.orangapps.githubclient4lightsoft;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
-import android.app.Dialog;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -19,22 +18,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import com.orangapps.githubclient4lightsoft.data.User;
 import com.orangapps.githubclient4lightsoft.data.UsersDataHolder;
-import com.orangapps.githubclient4lightsoft.githubApi.AsyncRequest;
 import com.orangapps.githubclient4lightsoft.ui.StableArrayAdapter;
-
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.orangapps.githubclient4lightsoft.ui.UserDetailsDialog;
 
 import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-
-import static com.orangapps.githubclient4lightsoft.utils.httpUtils.processStrToArray;
 
 
 public class MyActivity extends ActionBarActivity
@@ -58,6 +49,8 @@ public class MyActivity extends ActionBarActivity
     private StableArrayAdapter adapter;
     private ListView listview;
     private SwipeRefreshLayout mSwipeRefreshLayout;
+
+    private ArrayList<User> last5Users = new ArrayList<User>();
 
     private class FetchUsersAsyncTask extends AsyncTask<String, String, String> {
 
@@ -93,6 +86,13 @@ public class MyActivity extends ActionBarActivity
         }
     }
 
+    private void addToLast5Users(User user) {
+        if (last5Users.size() >= 5) {
+            last5Users.remove(0);
+        }
+        last5Users.add(user);
+    }
+
     @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR1)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -124,39 +124,9 @@ public class MyActivity extends ActionBarActivity
         listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, final View view, int position, long id) {
-                Dialog dialog = new Dialog(MyActivity.this);
                 User user = dataHolder.getUsers().get(position);
-
-
-                dialog.setTitle("Login: "+user.getLogin());
-                dialog.setContentView(R.layout.user_details_dialog);
-
-                ListView listview = (ListView) dialog.findViewById(R.id.repos_list);
-                List<String> values = new ArrayList<String>();
-
-                try {
-                    String reposStr = new AsyncRequest(user.getRepos_url()).execute().get();
-                    String[] repos = processStrToArray(reposStr);
-                    for (String repoStr : repos) {
-                        JSONObject repoJson = new JSONObject(repoStr);
-                        values.add(repoJson.getString("name"));
-
-                    }
-
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } catch (ExecutionException e) {
-                    e.printStackTrace();
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-
-
-                ArrayAdapter<String> adapter = new ArrayAdapter<String>(MyActivity.this, android.R.layout.simple_list_item_1, values);
-                listview.setAdapter(adapter);
-                dialog.show();
-
-
+                addToLast5Users(user);
+                new UserDetailsDialog(MyActivity.this, user).show();
             }
 
         });

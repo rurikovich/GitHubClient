@@ -15,7 +15,7 @@ import java.io.IOException;
 /**
  * Created by rurik on 27.09.14.
  */
-public class AsyncRequest extends AsyncTask<Void, Void, String> {
+public class AsyncRequest extends AsyncTask<String, Void, String> {
 
 
     private String url;
@@ -25,7 +25,7 @@ public class AsyncRequest extends AsyncTask<Void, Void, String> {
     }
 
     @Override
-    protected String doInBackground(Void... params) {
+    protected String doInBackground(String... params) {
         try {
             return sendGetRequest(url);
         } catch (JSONException e) {
