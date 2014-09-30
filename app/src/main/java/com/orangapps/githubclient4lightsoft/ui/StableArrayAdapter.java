@@ -21,7 +21,7 @@ import java.util.List;
  * Created by rurik on 28.09.14.
  */
 
-public class StableArrayAdapter extends ArrayAdapter<User> {
+public class StableArrayAdapter extends ArrayAdapter<User>  {
 
     private List<User> userList = new ArrayList<User>();
     private List<User> usersToAdd = new ArrayList<User>();

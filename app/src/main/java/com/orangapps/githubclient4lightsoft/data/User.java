@@ -38,6 +38,10 @@ public class User {
         return img;
     }
 
+    public String getRepos_url() {
+        return repos_url;
+    }
+
 
     @Override
     public boolean equals(Object o) {
