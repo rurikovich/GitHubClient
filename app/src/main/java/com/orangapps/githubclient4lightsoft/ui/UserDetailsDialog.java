@@ -9,6 +9,7 @@ import com.orangapps.githubclient4lightsoft.R;
 import com.orangapps.githubclient4lightsoft.data.User;
 import com.orangapps.githubclient4lightsoft.githubApi.AsyncRequest;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -26,22 +27,28 @@ public class UserDetailsDialog extends Dialog {
         setTitle("Login: " + user.getLogin());
         setContentView(R.layout.user_details_dialog);
 
-        ListView listview = (ListView) findViewById(R.id.repos_list);
-        List<String> values = new ArrayList<String>();
-
-        try {
-            String reposStr = new AsyncRequest(user.getRepos_url()).execute().get();
-            String[] repos = processStrToArray(reposStr);
-            for (String repoStr : repos) {
-                JSONObject repoJson = new JSONObject(repoStr);
-                values.add(repoJson.getString("name"));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(context, android.R.layout.simple_list_item_1, values);
+        final ListView listview = (ListView) findViewById(R.id.repos_list);
+        final List<String> values = new ArrayList<String>();
+        final ArrayAdapter<String> adapter = new ArrayAdapter<String>(context, android.R.layout.simple_list_item_1, values);
         listview.setAdapter(adapter);
+
+        new AsyncRequest(user.getRepos_url()) {
+            @Override
+            protected void onPostExecute(String s) {
+                super.onPostExecute(s);
+                String[] repos = processStrToArray(s);
+                for (String repoStr : repos) {
+                    try {
+                        JSONObject repoJson = new JSONObject(repoStr);
+                        values.add(repoJson.getString("name"));
+                        adapter.notifyDataSetChanged();
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }.execute();
+
 
     }
 }
