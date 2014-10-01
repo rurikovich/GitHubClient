@@ -15,7 +15,7 @@ import java.io.IOException;
  */
 public class httpUtils {
 
-        public static String[] processStrToArray(String users_str) {
+    public static String[] processStrToArray(String users_str) {
         users_str = users_str.substring(1, users_str.length() - 1);
         users_str = users_str.replace("},{", "},,{");
         return users_str.split(",,");
@@ -36,6 +36,10 @@ public class httpUtils {
         }
         return response_body_str;
 
+    }
+
+    public static String encodeURIComponent(String s) {
+        return s.replaceAll(" ", "%20");
     }
 
 }

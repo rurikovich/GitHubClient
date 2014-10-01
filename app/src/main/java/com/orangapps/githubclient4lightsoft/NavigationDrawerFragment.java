@@ -19,7 +19,19 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.SearchView;
+
+import com.orangapps.githubclient4lightsoft.githubApi.AsyncRequest;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+
+import static com.orangapps.githubclient4lightsoft.utils.httpUtils.encodeURIComponent;
+import static com.orangapps.githubclient4lightsoft.utils.httpUtils.processStrToArray;
 
 /**
  * Fragment used for managing interactions for and presentation of a navigation drawer.
@@ -28,6 +40,7 @@ import android.widget.ListView;
  */
 public class NavigationDrawerFragment extends Fragment {
 
+    private static final String SEARCH_BY_NAME_URL = "https://api.github.com/search/users?q=%s in:login";
     /**
      * Remember the position of the selected item.
      */
@@ -38,11 +51,12 @@ public class NavigationDrawerFragment extends Fragment {
      * expands it. This shared preference tracks this.
      */
     private static final String PREF_USER_LEARNED_DRAWER = "navigation_drawer_learned";
+    public static final int LAST_USERS_COUNT = 5;
 
     /**
      * A pointer to the current callbacks instance (the Activity).
      */
-    private NavigationDrawerCallbacks mCallbacks;
+    private MyActivity mCallbacks;
 
     /**
      * Helper component that ties the onImageDownloadedAction bar to the navigation drawer.
@@ -56,6 +70,11 @@ public class NavigationDrawerFragment extends Fragment {
     private int mCurrentSelectedPosition = 0;
     private boolean mFromSavedInstanceState;
     private boolean mUserLearnedDrawer;
+    private ArrayAdapter<String> mDrawerListViewAdapter;
+    private ArrayList<String> listValues = new ArrayList<String>();
+
+    private ArrayList<String> last5UsersLogins = new ArrayList<String>();
+    private ArrayList<String> searchResults = new ArrayList<String>();
 
     public NavigationDrawerFragment() {
     }
@@ -76,37 +95,90 @@ public class NavigationDrawerFragment extends Fragment {
 
         // Select either the default item (0) or the last selected item.
         selectItem(mCurrentSelectedPosition);
+
+
     }
 
     @Override
-    public void onActivityCreated (Bundle savedInstanceState) {
+    public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         // Indicate that this fragment would like to influence the set of actions in the onImageDownloadedAction bar.
         setHasOptionsMenu(true);
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-            Bundle savedInstanceState) {
-        mDrawerListView = (ListView) inflater.inflate(
-                R.layout.fragment_navigation_drawer, container, false);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        LinearLayout layout = (LinearLayout) inflater.inflate(R.layout.fragment_navigation_drawer, container, false);
+        mDrawerListView = (ListView) layout.findViewById(R.id.last5listlayout);
         mDrawerListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 selectItem(position);
             }
         });
-        mDrawerListView.setAdapter(new ArrayAdapter<String>(
+        listValues.clear();
+        listValues.addAll(last5UsersLogins);
+        mDrawerListViewAdapter = new ArrayAdapter<String>(
                 getActionBar().getThemedContext(),
                 android.R.layout.simple_list_item_1,
                 android.R.id.text1,
-                new String[]{
-                        getString(R.string.title_section1),
-                        getString(R.string.title_section2),
-                        getString(R.string.title_section3),
-                }));
+                listValues
+        );
+        mDrawerListView.setAdapter(mDrawerListViewAdapter);
         mDrawerListView.setItemChecked(mCurrentSelectedPosition, true);
-        return mDrawerListView;
+
+
+        final SearchView searchView = (SearchView) layout.findViewById(R.id.searchByName);
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                String url = String.format(SEARCH_BY_NAME_URL, searchView.getQuery());
+                url = encodeURIComponent(url);
+                new AsyncRequest(url) {
+                    @Override
+                    protected void onPostExecute(String s) {
+                        super.onPostExecute(s);
+                        searchResults.clear();
+                        try {
+                            JSONObject searchResultJson = new JSONObject(s);
+                            String[] userArray = processStrToArray(searchResultJson.getString("items"));
+                            for (String userStr : userArray) {
+                                JSONObject userJson = new JSONObject(userStr);
+                                searchResults.add(userJson.getString("login"));
+                            }
+                            listValues.clear();
+                            listValues.addAll(searchResults);
+                            mDrawerListViewAdapter.notifyDataSetChanged();
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+
+                    }
+                }.execute();
+
+
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                return false;
+            }
+        });
+
+        searchView.setOnCloseListener(new SearchView.OnCloseListener() {
+            @Override
+            public boolean onClose() {
+                listValues.clear();
+                listValues.addAll(last5UsersLogins);
+                return false;
+            }
+        });
+
+        return layout;
     }
 
     public boolean isDrawerOpen() {
@@ -204,7 +276,7 @@ public class NavigationDrawerFragment extends Fragment {
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         try {
-            mCallbacks = (NavigationDrawerCallbacks) activity;
+            mCallbacks = (MyActivity) activity;
         } catch (ClassCastException e) {
             throw new ClassCastException("Activity must implement NavigationDrawerCallbacks.");
         }
@@ -271,5 +343,18 @@ public class NavigationDrawerFragment extends Fragment {
          * Called when an item in the navigation drawer is selected.
          */
         void onNavigationDrawerItemSelected(int position);
+    }
+
+    public void addUserToLastList(String login) {
+        if (!last5UsersLogins.contains(login)) {
+            if (last5UsersLogins.size() >= LAST_USERS_COUNT) {
+                last5UsersLogins.remove(0);
+            }
+            last5UsersLogins.add(login);
+            listValues.clear();
+            listValues.addAll(last5UsersLogins);
+            mDrawerListViewAdapter.notifyDataSetChanged();
+        }
+
     }
 }

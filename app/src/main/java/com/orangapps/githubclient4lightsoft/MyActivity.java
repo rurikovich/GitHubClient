@@ -1,7 +1,6 @@
 package com.orangapps.githubclient4lightsoft;
 
 import android.annotation.TargetApi;
-import android.app.Activity;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -50,7 +49,7 @@ public class MyActivity extends ActionBarActivity
     private ListView listview;
     private SwipeRefreshLayout mSwipeRefreshLayout;
 
-    private ArrayList<User> last5Users = new ArrayList<User>();
+    private ArrayList<String> last5Users = new ArrayList<String>();
 
     private class FetchUsersAsyncTask extends AsyncTask<String, String, String> {
 
@@ -86,12 +85,6 @@ public class MyActivity extends ActionBarActivity
         }
     }
 
-    private void addToLast5Users(User user) {
-        if (last5Users.size() >= 5) {
-            last5Users.remove(0);
-        }
-        last5Users.add(user);
-    }
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR1)
     @Override
@@ -125,7 +118,7 @@ public class MyActivity extends ActionBarActivity
             @Override
             public void onItemClick(AdapterView<?> parent, final View view, int position, long id) {
                 User user = dataHolder.getUsers().get(position);
-                addToLast5Users(user);
+                mNavigationDrawerFragment.addUserToLastList(user.getLogin());
                 new UserDetailsDialog(MyActivity.this, user).show();
             }
 
@@ -144,19 +137,7 @@ public class MyActivity extends ActionBarActivity
                 .commit();
     }
 
-    public void onSectionAttached(int number) {
-        switch (number) {
-            case 1:
-                mTitle = getString(R.string.title_section1);
-                break;
-            case 2:
-                mTitle = getString(R.string.title_section2);
-                break;
-            case 3:
-                mTitle = getString(R.string.title_section3);
-                break;
-        }
-    }
+
 
     public void restoreActionBar() {
         ActionBar actionBar = getSupportActionBar();
@@ -268,12 +249,7 @@ public class MyActivity extends ActionBarActivity
             return rootView;
         }
 
-        @Override
-        public void onAttach(Activity activity) {
-            super.onAttach(activity);
-            ((MyActivity) activity).onSectionAttached(
-                    getArguments().getInt(ARG_SECTION_NUMBER));
-        }
     }
+
 
 }
